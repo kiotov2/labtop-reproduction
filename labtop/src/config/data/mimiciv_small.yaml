@@ -1,0 +1,17 @@
+# Small-scale MIMIC-IV configuration for CPU-friendly local experiments
+# This config is designed for the sliced dataset created by scripts/slice_mimic.py
+
+defaults:
+  - mimiciv
+
+# Override data path to point to small dataset
+raw_data_path: ./data_small
+
+# More lenient filtering for small dataset
+min_los: 1  # Accept stays >= 1 hour (vs 6 hours for full dataset)
+
+# Use all data in the small set (no additional sampling)
+debug_table_sample_ratio: 1.0
+
+# Keep debugging mode off for accurate results
+# (The small dataset size itself provides the speedup)

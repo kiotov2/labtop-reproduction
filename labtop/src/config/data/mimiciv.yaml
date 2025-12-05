@@ -1,0 +1,55 @@
+data_path : ${data_path}
+raw_data_path : /home/data_storage/mimic-iv-3.1
+ext : .csv
+select_items : true
+
+# cohort
+use_tables :
+  - labevents
+  - emar
+  - inputevents
+  - procedureevents
+  - microbiologyevents
+  - outputevents
+lab_table: labevents
+cohort_path : ../../preprocessed_data/mimiciv/mimiciv_cohort_3.0_lab.csv
+min_los : 6
+only_top_10 : false
+remove_longer_icu : false
+
+# train
+train_only_lab : true
+
+#  value type 
+value_type : numeric # num bucket
+num_token : false
+num_bucket : false 
+num_bucket_dict_path : data/mimiciv_lab_emar_input_procedure_output_micro/num_bucket_dict.json
+num_bucket_num : 5 
+all_num_bucket : false #false
+no_bracket : false
+num_bucket_per_item : false
+set_num_bucket : false
+
+
+# time info
+time_gap : text # text, token
+no_time : false
+timeoffset : datetime # abs
+add_weekday : true
+max_day_len : 250
+
+# base info
+base_info : true
+
+# misc.
+add_end_of_event : true
+seq_method : one_icu
+use_only_lab : false
+no_col_name : true
+
+# just for gpt 4o
+sampling: false
+sampling_ratio: 0.1
+
+debug_table_sample_ratio: 0.01

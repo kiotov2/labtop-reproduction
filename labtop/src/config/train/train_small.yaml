@@ -1,0 +1,20 @@
+# Small-scale training configuration for CPU-friendly local experiments
+# Optimized for speed over accuracy - suitable for validating the pipeline
+
+defaults:
+  - train_base
+
+# Reduce training time
+epochs: 2  # Just need to show model can learn
+patience: 1  # Early stop after 1 epoch without improvement
+
+# Small batch size for CPU/limited memory
+batch_size: 2  # Minimal batch size
+gradient_accumulation_steps: 8  # Simulate larger batch (effective batch = 2 * 8 = 16)
+
+# Optional: Disable wandb for local testing
+use_wandb: false
+
+# Keep single seed for faster execution
+multi_seed: false
+seeds: [42]

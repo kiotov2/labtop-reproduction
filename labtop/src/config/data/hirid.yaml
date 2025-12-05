@@ -1,0 +1,51 @@
+data_path : ${data_path}
+raw_data_path : /nfs_data_storage/hirid/1.1.1
+ext : .csv
+select_items : true
+
+# cohort
+use_tables :
+  - observation_tables
+  - pharma_records
+lab_table: observation _ tables
+cohort_path : ../../preprocessed_data/hirid/cohort.csv
+min_los : 6
+only_top_10 : false
+remove_longer_icu : false
+
+# train 
+train_only_lab : true
+
+#  value type 
+value_type : numeric
+num_token : false
+num_bucket : false 
+num_bucket_dict_path : None
+num_bucket_num : 5 
+all_num_bucket : false #false
+no_bracket : false
+num_bucket_per_item : false
+set_num_bucket : false
+
+# time info
+time_gap : text # text, token
+no_time : false
+timeoffset : datetime # abs, gap, datetime, datetime_text
+add_weekday : true
+max_day_len : 250
+
+# base info
+base_info : true
+
+# misc.
+add_end_of_event : true
+seq_method : one_icu
+use_only_lab : false
+no_col_name : true
+
+# just for gpt 4o
+sampling: false
+sampling_ratio: 0.1
+
+# debugging mode
+debug_table_sample_ratio: 0.1
