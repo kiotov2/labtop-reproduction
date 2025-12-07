@@ -138,11 +138,23 @@ class MIMICSlicer:
 
             # Read in chunks to handle large files
             chunks = []
+            chunk_num = 0
+            rows_processed = 0
+            rows_kept = 0
+            
             for chunk in pd.read_csv(source_file, chunksize=100000, low_memory=False):
+                chunk_num += 1
+                rows_processed += len(chunk)
+                
                 if key in chunk.columns:
                     filtered = chunk[chunk[key].isin(self.selected_stay_ids)]
                     if len(filtered) > 0:
                         chunks.append(filtered)
+                        rows_kept += len(filtered)
+                
+                # Print progress every 5 chunks
+                if chunk_num % 5 == 0:
+                    print(f"    → Chunk {chunk_num}: {rows_processed:,} rows scanned, {rows_kept:,} kept")
 
             if chunks:
                 df = pd.concat(chunks, ignore_index=True)
@@ -172,11 +184,23 @@ class MIMICSlicer:
                     continue
                 key = config['key']
                 chunks = []
+                chunk_num = 0
+                rows_processed = 0
+                rows_kept = 0
+                
                 for chunk in pd.read_csv(source_file, chunksize=100000, low_memory=False):
+                    chunk_num += 1
+                    rows_processed += len(chunk)
+                    
                     if key in chunk.columns:
                         filtered = chunk[chunk[key].isin(emar_ids)]
                         if len(filtered) > 0:
                             chunks.append(filtered)
+                            rows_kept += len(filtered)
+                    
+                    if chunk_num % 5 == 0:
+                        print(f"    → Chunk {chunk_num}: {rows_processed:,} rows scanned, {rows_kept:,} kept")
+                        
                 if chunks:
                     df = pd.concat(chunks, ignore_index=True)
                     self._save_csv(df, relative_path)
@@ -185,11 +209,23 @@ class MIMICSlicer:
             # Regular filtering
             key = config['key']
             chunks = []
+            chunk_num = 0
+            rows_processed = 0
+            rows_kept = 0
+            
             for chunk in pd.read_csv(source_file, chunksize=100000, low_memory=False):
+                chunk_num += 1
+                rows_processed += len(chunk)
+                
                 if key in chunk.columns:
                     filtered = chunk[chunk[key].isin(self.selected_hadm_ids)]
                     if len(filtered) > 0:
                         chunks.append(filtered)
+                        rows_kept += len(filtered)
+                
+                # Print progress every 5 chunks (labevents has ~200 chunks, so ~40 updates)
+                if chunk_num % 5 == 0:
+                    print(f"    → Chunk {chunk_num}: {rows_processed:,} rows scanned, {rows_kept:,} kept")
 
             if chunks:
                 df = pd.concat(chunks, ignore_index=True)
