@@ -28,14 +28,15 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 class Trainer:
     def __init__(self, cfg, model, tokenizer, train_dataset, valid_dataset, valid_prompt_dataset, optimizer, criterion, device):
         self.cfg, self.model, self.tokenizer, self.device = cfg, model, tokenizer, device
-        self.valid_prompt_dataset = Subset(valid_prompt_dataset, range(100000)) if valid_prompt_dataset else None
+        # Handle small datasets by using min() to avoid index out of bounds
+        self.valid_prompt_dataset = Subset(valid_prompt_dataset, range(min(100000, len(valid_prompt_dataset)))) if valid_prompt_dataset else None
        
         if cfg.debugging_mode:
-            self.train_dataset = Subset(train_dataset, range(1000))
-            self.valid_dataset = Subset(valid_dataset, range(100))
+            self.train_dataset = Subset(train_dataset, range(min(1000, len(train_dataset))))
+            self.valid_dataset = Subset(valid_dataset, range(min(100, len(valid_dataset))))
         else:
             self.train_dataset = train_dataset
-            self.valid_dataset = Subset(valid_dataset, range(10000))
+            self.valid_dataset = Subset(valid_dataset, range(min(10000, len(valid_dataset))))
             
         self.optimizer, self.criterion = optimizer, criterion
 
@@ -61,14 +62,20 @@ class Trainer:
         self.accelerator.init_trackers("labtop", config=OmegaConf.to_container(self.cfg, resolve=True))
 
     def _prepare_dataloaders(self):
-        self.batch_size = self.cfg.train.batch_size // self.cfg.train.gradient_accumulation_steps
-        # multiprocessing 오류 방지
+        self.batch_size = max(1, self.cfg.train.batch_size // self.cfg.train.gradient_accumulation_steps)
+        # Use fewer workers for small datasets to avoid multiprocessing issues
         try:
             num_workers = get_optimal_num_workers(self.batch_size)
         except (NameError, AttributeError) as e:
             if self.accelerator.is_main_process:
                 self.accelerator.print(f"Warning: Could not determine optimal workers: {e}")
-            num_workers = 4  
+            num_workers = 4
+        
+        # Reduce workers for small datasets
+        if len(self.train_dataset) < 500:
+            num_workers = 0  # Use main process for small datasets
+            if self.accelerator.is_main_process:
+                self.accelerator.print(f"Small dataset detected ({len(self.train_dataset)} samples), using num_workers=0")
         
         self.train_dataloader = EHRGPTDataLoader(self.train_dataset, self.batch_size, shuffle=True, num_workers=num_workers).dataloader
         self.valid_dataloader = EHRGPTDataLoader(self.valid_dataset, self.batch_size, shuffle=False, num_workers=num_workers).dataloader
@@ -101,7 +108,7 @@ class Trainer:
         data_tag += f"_{self.cfg.max_seq_len}_seed{self.cfg.train.seed}"
         self.model_dir = f"./trained_models/{data_tag}_head{self.cfg.model.n_heads}_layer{self.cfg.model.n_layers}_dim{self.cfg.model.hidden_dim}"
         if not self.cfg.train.model_path and os.path.exists(self.model_dir) and self.accelerator.is_main_process:
-            print("Remove existing model directory"); input()
+            print("Remove existing model directory")
             os.system(f"rm -rf {self.model_dir}")
 
     def _forward_pass(self, inputs):
