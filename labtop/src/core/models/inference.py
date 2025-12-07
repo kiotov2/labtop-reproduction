@@ -42,14 +42,17 @@ class Inference:
             model = LabTOPModel(self.cfg, self.tokenizer)
             
             # 체크포인트 로드
-            if os.path.exists(os.path.join(self.cfg.test.model_path, "pytorch_model.bin")):
-                state_dict = torch.load(
-                    os.path.join(self.cfg.test.model_path, "pytorch_model.bin"),
-                    map_location=self.device
-                )
+            model_path = os.path.join(self.cfg.test.model_path, "pytorch_model.bin")
+            if os.path.exists(model_path):
+                state_dict = torch.load(model_path, map_location=self.device)
                 model.load_state_dict(state_dict)
+                print(f"✓ Loaded model weights from {model_path}")
             else:
-                print("Warning: No model weights found")
+                raise FileNotFoundError(
+                    f"Model weights not found at {model_path}. "
+                    f"Training may have failed to save the model. "
+                    f"Please re-train or check the model directory."
+                )
                 
             model = model.to(self.device)
             
